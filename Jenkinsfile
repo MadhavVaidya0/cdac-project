@@ -26,6 +26,21 @@ pipeline {
             }
         }
 
+        stage('Sign Image with Cosign') {
+    steps {
+        withCredentials([file(credentialsId: 'cosign-key', variable: 'COSIGN_KEY')]) {
+            sh '''
+              export COSIGN_PASSWORD=""
+              cosign sign --key $COSIGN_KEY devsecops-demo:latest
+            '''
+        }
+    }
+}
+
+
+
+
+
         stage('Deploy to Kubernetes') {
             steps {
                 sh 'kubectl apply -f k8s-deploy.yaml'
