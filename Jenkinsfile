@@ -14,6 +14,19 @@ pipeline {
                 checkout scm
             }
         }
+    stage('SonarQube Analysis') {
+    steps {
+        withSonarQubeEnv('sonarqube') {
+            sh '''
+              sonar-scanner \
+              -Dsonar.projectKey=devsecops-demo \
+              -Dsonar.sources=. \
+              -Dsonar.host.url=http://localhost:9000 \
+              -Dsonar.login=$SONAR_AUTH_TOKEN
+            '''
+        }
+    }
+}
 
         stage('Build Docker Image') {
             steps {
