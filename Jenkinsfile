@@ -41,16 +41,19 @@ pipeline {
         }
 
         stage('Sign Image with Cosign') {
-            steps {
-                withCredentials([file(credentialsId: 'cosign-key', variable: 'COSIGN_KEY')]) {
-                    sh '''
-                      export COSIGN_PASSWORD=""
-                      DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG} | sed 's|^|localhost:5000/|')
-                      cosign sign --key $COSIGN_KEY $DIGEST
-                    '''
-                }
-            }
+    steps {
+        withCredentials([
+            file(credentialsId: 'cosign-key', variable: 'COSIGN_KEY'),
+            string(credentialsId: 'cosign-pass', variable: 'COSIGN_PASSWORD')
+        ]) {
+            sh '''
+              DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' localhost:5000/${IMAGE_NAME}:${IMAGE_TAG})
+              cosign sign --key $COSIGN_KEY $DIGEST
+            '''
         }
+    }
+}
+
 
         stage('Deploy to Kubernetes') {
             steps {
