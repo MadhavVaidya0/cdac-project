@@ -60,15 +60,18 @@ pipeline {
             }
         }
 
-        stage('Sign Images with Cosign') {
+	stage('Sign Images with Cosign') {
     steps {
         withCredentials([
             file(credentialsId: 'cosign-key', variable: 'COSIGN_KEY'),
             string(credentialsId: 'cosign-pass', variable: 'COSIGN_PASSWORD')
         ]) {
             sh '''
-              FRONTEND_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${REGISTRY}/${FRONTEND_IMAGE}:${IMAGE_TAG})
-              BACKEND_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${REGISTRY}/${BACKEND_IMAGE}:${IMAGE_TAG})
+              FRONTEND_SHA=$(docker inspect --format='{{index .RepoDigests 0}}' ${REGISTRY}/${FRONTEND_IMAGE}:${IMAGE_TAG} | cut -d@ -f2)
+              BACKEND_SHA=$(docker inspect --format='{{index .RepoDigests 0}}' ${REGISTRY}/${BACKEND_IMAGE}:${IMAGE_TAG} | cut -d@ -f2)
+
+              FRONTEND_DIGEST=${REGISTRY}/${FRONTEND_IMAGE}@${FRONTEND_SHA}
+              BACKEND_DIGEST=${REGISTRY}/${BACKEND_IMAGE}@${BACKEND_SHA}
 
               echo "Signing $FRONTEND_DIGEST"
               echo "Signing $BACKEND_DIGEST"
@@ -79,7 +82,6 @@ pipeline {
         }
     }
 }
-
 
         stage('Deploy to Kubernetes') {
             steps {
