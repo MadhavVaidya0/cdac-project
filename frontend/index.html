@@ -6,16 +6,19 @@
   <link rel="stylesheet" href="style.css">
 </head>
 <body>
-
-  <h1>📝 DevSecOps To‑Do List</h1>
-
+  <h1>📝 To‑Do List</h1>
   <div class="todo-box">
     <input type="text" id="taskInput" placeholder="Enter task">
     <button onclick="addTask()">Add</button>
   </div>
-
   <ul id="taskList"></ul>
+
+  <!-- ✅ API injected by Docker/Jenkins -->
+  <script>
+     window.API_URL = "http://192.168.10.129:30001";    
+  </script>
 
   <script src="script.js"></script>
 </body>
 </html>
+

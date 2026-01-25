@@ -1,4 +1,4 @@
-const API_URL = "http://192.168.10.129:30001";
+const API_URL = window.API_URL;
 
 // Load todos on page load
 window.onload = loadTodos;

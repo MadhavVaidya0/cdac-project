@@ -3,6 +3,7 @@ kind: Deployment
 metadata:
   name: frontend
 spec:
+  replicas: 1
   selector:
     matchLabels:
       app: frontend
@@ -13,8 +14,8 @@ spec:
     spec:
       containers:
       - name: frontend
-        image: todo-frontend:latest
-        imagePullPolicy: IfNotPresent
+        image: 192.168.10.130:5000/todo-frontend-fixed:1
+        imagePullPolicy: Always
         ports:
         - containerPort: 80
 ---
@@ -27,38 +28,6 @@ spec:
   selector:
     app: frontend
   ports:
-  - port: 80
-    nodePort: 30080
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: frontend
-spec:
-  selector:
-    matchLabels:
-      app: frontend
-  template:
-    metadata:
-      labels:
-        app: frontend
-    spec:
-      nodeSelector:
-        role: worker
-      containers:
-      - name: frontend
-        image: todo-frontend:latest
-        imagePullPolicy: IfNotPresent
-        ports:
-        - containerPort: 80
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: frontend-service
-spec:
-  type: NodePort
-  selector:
-    app: frontend
-  ports:
-  - port: 80
-    nodePort: 30080
+    - port: 80
+      nodePort: 30080
+
