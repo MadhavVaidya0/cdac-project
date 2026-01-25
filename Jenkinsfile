@@ -33,15 +33,19 @@ pipeline {
         }
 
         stage('Build Docker Images') {
-            steps {
-                sh '''
-                  docker build -t $REGISTRY/$BACKEND_IMAGE:$TAG backend
-                  docker build \
-                    --build-arg API_URL=$BACKEND_API_URL \
-                    -t $REGISTRY/$FRONTEND_IMAGE:$TAG frontend
-                '''
-            }
-        }
+    steps {
+        sh '''
+          # Backend (cache is OK)
+          docker build -t $REGISTRY/$BACKEND_IMAGE:$TAG backend
+
+          # Frontend (NO CACHE to force CSS/JS rebuild)
+          docker build --no-cache \
+            --build-arg API_URL=$BACKEND_API_URL \
+            -t $REGISTRY/$FRONTEND_IMAGE:$TAG frontend
+        '''
+    }
+}
+
 
         stage('Trivy Scan') {
             steps {
@@ -79,16 +83,26 @@ pipeline {
         }
 
         stage('Deploy to Kubernetes') {
-            steps {
-                sh '''
-                  sed -i "s|IMAGE_TAG|$TAG|g" k8s/backend.yaml
-                  sed -i "s|IMAGE_TAG|$TAG|g" k8s/frontend.yaml
-
-                  kubectl apply -f k8s/mysql.yaml
-                  kubectl apply -f k8s/backend.yaml
-                  kubectl apply -f k8s/frontend.yaml
-                '''
-            }
-        }
+    environment {
+        KUBECONFIG = "/var/lib/jenkins/.kube/config"
     }
+    steps {
+        sh '''
+          sed -i "s|IMAGE_TAG|$TAG|g" k8s/backend.yaml
+          sed -i "s|IMAGE_TAG|$TAG|g" k8s/frontend.yaml
+
+          # ensure imagePullPolicy Always
+          sed -i "/image:/a\\        imagePullPolicy: Always" k8s/frontend.yaml
+
+          kubectl apply -f k8s/mysql.yaml
+          kubectl apply -f k8s/backend.yaml
+          kubectl apply -f k8s/frontend.yaml
+
+          #  force rollout so UI always updates
+          kubectl rollout restart deployment frontend
+        '''
+    }
+}
+
+}
 }
