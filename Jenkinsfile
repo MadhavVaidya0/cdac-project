@@ -17,18 +17,18 @@ pipeline {
         }
 
         stage('SonarQube Analysis') {
-            steps {
-                withSonarQubeEnv('sonarqube') {
-                    sh '''
-                      sonar-scanner \
-                      -Dsonar.projectKey=todo-app \
-                      -Dsonar.sources=. \
-                      -Dsonar.host.url=http://localhost:9000 \
-                      -Dsonar.login=$SONAR_AUTH_TOKEN
-                    '''
-                }
-            }
+    steps {
+        withSonarQubeEnv('sonarqube') {
+            sh '''
+              sonar-scanner \
+              -Dsonar.projectKey=todo-app \
+              -Dsonar.sources=. \
+              -Dsonar.host.url=http://localhost:9000 \
+              -Dsonar.login=$SONAR_AUTH_TOKEN
+            '''
         }
+    }
+}
 
         stage('Build Docker Images') {
             steps {
@@ -61,18 +61,22 @@ pipeline {
         }
 
         stage('Sign Images with Cosign') {
-            steps {
-                withCredentials([
-                    file(credentialsId: 'cosign-key', variable: 'COSIGN_KEY'),
-                    string(credentialsId: 'cosign-pass', variable: 'COSIGN_PASSWORD')
-                ]) {
-                    sh '''
-                      cosign sign --key $COSIGN_KEY ${REGISTRY}/${FRONTEND_IMAGE}:${IMAGE_TAG}
-                      cosign sign --key $COSIGN_KEY ${REGISTRY}/${BACKEND_IMAGE}:${IMAGE_TAG}
-                    '''
-                }
-            }
+    steps {
+        withCredentials([
+            file(credentialsId: 'cosign-key', variable: 'COSIGN_KEY'),
+            string(credentialsId: 'cosign-pass', variable: 'COSIGN_PASSWORD')
+        ]) {
+            sh '''
+              FRONTEND_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${REGISTRY}/${FRONTEND_IMAGE}:${IMAGE_TAG})
+              BACKEND_DIGEST=$(docker inspect --format='{{index .RepoDigests 0}}' ${REGISTRY}/${BACKEND_IMAGE}:${IMAGE_TAG})
+
+              cosign sign --key $COSIGN_KEY $FRONTEND_DIGEST
+              cosign sign --key $COSIGN_KEY $BACKEND_DIGEST
+            '''
         }
+    }
+}
+
 
         stage('Deploy to Kubernetes') {
             steps {
