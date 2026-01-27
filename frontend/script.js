@@ -1,10 +1,9 @@
 const API_URL = window.API_URL || "http://192.168.10.129:30001";
 
-
-// Load todos on page load
+// ---------------- PAGE LOAD ----------------
 window.onload = function () {
-  // If not logged in → go to login
-  if (!localStorage.getItem("loggedIn") && !window.location.pathname.includes("login.html")) {
+  // If token missing → go to login
+  if (!localStorage.getItem("token") && !window.location.pathname.includes("login.html")) {
     window.location.href = "login.html";
     return;
   }
@@ -15,31 +14,54 @@ window.onload = function () {
   }
 };
 
-// Redirect to login if not logged in
-if (!localStorage.getItem("loggedIn") && !window.location.pathname.includes("login.html")) {
-  window.location.href = "login.html";
+// ---------------- AUTH FUNCTIONS ----------------
+
+function register() {
+  fetch(`${API_URL}/register`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      username: document.getElementById("username").value,
+      password: document.getElementById("password").value
+    })
+  })
+    .then(res => res.json())
+    .then(data => alert(data.message || data.error));
 }
 
 function login() {
-  const user = document.getElementById("username").value;
-  const pass = document.getElementById("password").value;
-
-  // Simple demo login (replace with backend later)
-  if (user === "admin" && pass === "admin") {
-    localStorage.setItem("loggedIn", "true");
-    window.location.href = "index.html";
-  } else {
-    document.getElementById("error").innerText = "Invalid credentials";
-  }
+  fetch(`${API_URL}/login`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({
+      username: document.getElementById("username").value,
+      password: document.getElementById("password").value
+    })
+  })
+    .then(res => res.json())
+    .then(data => {
+      if (data.token) {
+        localStorage.setItem("token", data.token);
+        window.location.href = "index.html";
+      } else {
+        document.getElementById("error").innerText = "Invalid credentials";
+      }
+    });
 }
 
 function logout() {
-  localStorage.removeItem("loggedIn");
+  localStorage.removeItem("token");
   window.location.href = "login.html";
 }
 
+// ---------------- TODO FUNCTIONS ----------------
+
 function loadTodos() {
-  fetch(`${API_URL}/todos`)
+  fetch(`${API_URL}/todos`, {
+    headers: {
+      "Authorization": localStorage.getItem("token")
+    }
+  })
     .then(res => res.json())
     .then(data => {
       const list = document.getElementById("taskList");
@@ -55,7 +77,10 @@ function addTask() {
 
   fetch(`${API_URL}/todos`, {
     method: "POST",
-    headers: { "Content-Type": "application/json" },
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": localStorage.getItem("token")
+    },
     body: JSON.stringify({ task: taskText })
   })
     .then(res => res.json())
@@ -65,6 +90,19 @@ function addTask() {
     });
 }
 
+function deleteTask(id, btn) {
+  fetch(`${API_URL}/todos/${id}`, {
+    method: "DELETE",
+    headers: {
+      "Authorization": localStorage.getItem("token")
+    }
+  }).then(() => {
+    btn.parentElement.remove();
+  });
+}
+
+// ---------------- UI HELPER ----------------
+
 function addTaskToUI(todo) {
   const li = document.createElement("li");
   li.innerHTML = `
@@ -72,12 +110,5 @@ function addTaskToUI(todo) {
     <button onclick="deleteTask(${todo.id}, this)">❌</button>
   `;
   document.getElementById("taskList").appendChild(li);
-}
-
-function deleteTask(id, btn) {
-  fetch(`${API_URL}/todos/${id}`, { method: "DELETE" })
-    .then(() => {
-      btn.parentElement.remove();
-    });
 }
 
