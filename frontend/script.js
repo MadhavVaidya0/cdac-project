@@ -17,6 +17,8 @@ window.onload = function () {
 // ---------------- AUTH FUNCTIONS ----------------
 
 function register() {
+  console.log("Register button clicked");
+
   fetch(`${API_URL}/register`, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
@@ -28,6 +30,7 @@ function register() {
     .then(res => res.json())
     .then(data => alert(data.message || data.error));
 }
+
 
 function login() {
   fetch(`${API_URL}/login`, {
