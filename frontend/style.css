@@ -52,3 +52,20 @@ li {
   border-radius: 5px;
 }
 
+.login-container {
+  width: 300px;
+  margin: 100px auto;
+  text-align: center;
+}
+
+.login-container input {
+  display: block;
+  width: 100%;
+  padding: 8px;
+  margin: 10px 0;
+}
+
+.login-container button {
+  padding: 10px;
+  width: 100%;
+}

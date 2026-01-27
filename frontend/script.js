@@ -1,7 +1,42 @@
-const API_URL = window.API_URL;
+const API_URL = window.API_URL || "http://192.168.10.129:30001";
+
 
 // Load todos on page load
-window.onload = loadTodos;
+window.onload = function () {
+  // If not logged in → go to login
+  if (!localStorage.getItem("loggedIn") && !window.location.pathname.includes("login.html")) {
+    window.location.href = "login.html";
+    return;
+  }
+
+  // Only load todos on main page
+  if (document.getElementById("taskList")) {
+    loadTodos();
+  }
+};
+
+// Redirect to login if not logged in
+if (!localStorage.getItem("loggedIn") && !window.location.pathname.includes("login.html")) {
+  window.location.href = "login.html";
+}
+
+function login() {
+  const user = document.getElementById("username").value;
+  const pass = document.getElementById("password").value;
+
+  // Simple demo login (replace with backend later)
+  if (user === "admin" && pass === "admin") {
+    localStorage.setItem("loggedIn", "true");
+    window.location.href = "index.html";
+  } else {
+    document.getElementById("error").innerText = "Invalid credentials";
+  }
+}
+
+function logout() {
+  localStorage.removeItem("loggedIn");
+  window.location.href = "login.html";
+}
 
 function loadTodos() {
   fetch(`${API_URL}/todos`)
