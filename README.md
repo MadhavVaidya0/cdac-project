@@ -1,1 +1,2 @@
 This project implements an end‑to‑end DevSecOps workflow where applications are built and deployed to a K3s Kubernetes cluster through a CI/CD pipeline, continuously monitored using Prometheus, and protected with security tools like Suricata and Falco. When a pod becomes unhealthy, Prometheus triggers Alertmanager to send real‑time email notifications, ensuring quick detection and response to failures.
+<img width="2724" height="1226" alt="project-Page-2 drawio" src="https://github.com/user-attachments/assets/adf59c87-7073-4eb1-bf35-2fe2b1550991" />
